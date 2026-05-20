@@ -1,0 +1,20 @@
+{
+  "name": "opsis-bulk-sender",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Opsis Dalmatia bulk email outreach — replaces 10 n8n workflows. Round-robin across 10 industries, SMTP send, Google Sheets dedup.",
+  "main": "src/send.js",
+  "scripts": {
+    "start": "node src/send.js",
+    "dry": "DRY_RUN=true node src/send.js",
+    "test-one": "node src/send.js --industry"
+  },
+  "dependencies": {
+    "google-spreadsheet": "^4.1.4",
+    "google-auth-library": "^9.14.1",
+    "nodemailer": "^6.9.16"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

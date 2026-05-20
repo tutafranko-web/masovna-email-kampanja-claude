@@ -1,0 +1,98 @@
+{
+  "industries": [
+    {
+      "key": "psihijatrija",
+      "label": "Psihijatrijske ordinacije",
+      "sheet_id": "1eMoz0BTb9KNjtwFG9Xyz6Cl5XAlRJqdw7aK2oyK-VG8",
+      "gid": "2120436645",
+      "sender_email": "opsisdalmatiaa1@opsisdalmatiaoutreachseriaa.com",
+      "smtp_key": "a1"
+    },
+    {
+      "key": "ortopedija",
+      "label": "Ortopedske ordinacije",
+      "sheet_id": "1ulv8WP6TfbuRibTl-u35c4PdZWI418Pe3Lh61d3V8oU",
+      "gid": "2031387484",
+      "sender_email": "opsisdalmatiaa2@opsisdalmatiaoutreachseriaa.com",
+      "smtp_key": "a2"
+    },
+    {
+      "key": "medicina_rada",
+      "label": "Ordinacije medicine rada",
+      "sheet_id": "1vqKy_JimD5aWIWN7sK76zDUgOgboiZdl_dY4CWg-N0E",
+      "gid": "1469305083",
+      "sender_email": "opsisdalmatiaa3@opsisdalmatiaoutreachseriaa.com",
+      "smtp_key": "a3"
+    },
+    {
+      "key": "pedijatrija",
+      "label": "Pedijatrijske ordinacije",
+      "sheet_id": "1hpetszwH4qQEzjTENsUzdx4T-mcJXgxC3wPMtsttCuI",
+      "gid": "1884523350",
+      "sender_email": "opsisdalmatiab1@opsisdalmatiaoutreachseriab.com",
+      "smtp_key": "b1"
+    },
+    {
+      "key": "fizioterapija",
+      "label": "Fizioterapeutske ordinacije",
+      "sheet_id": "1m37cHKXLVzvQ20RCK3oU47j-HRTMWMJYgf0hmhBNFD0",
+      "gid": "2076229907",
+      "sender_email": "opsisdalmatiab2@opsisdalmatiaoutreachseriab.com",
+      "smtp_key": "b2"
+    },
+    {
+      "key": "ginekologija",
+      "label": "Ginekoloske ordinacije",
+      "sheet_id": "1E0aJSYEUxkkw0zM_hRaGL4R_4ftnTIq-nren6lNE8Q4",
+      "gid": "1004637130",
+      "sender_email": "opsisdalmatiab3@opsisdalmatiaoutreachseriab.com",
+      "smtp_key": "b3"
+    },
+    {
+      "key": "tour",
+      "label": "Turisticke agencije i ture",
+      "sheet_id": "1kL-X1JF4atvN67doJkdwrGjUBalSRlCgm935JSI2cks",
+      "gid": "1331794914",
+      "sender_email": "opsisdalmatiab4@opsisdalmatiaoutreachseriab.com",
+      "smtp_key": "b4"
+    },
+    {
+      "key": "oftamologija",
+      "label": "Oftalmoloske ordinacije",
+      "sheet_id": "1sclWDWDW24A1QvAM3hCl-ODIPaBhekRWI_6_Qo4mRQM",
+      "gid": "1913013049",
+      "sender_email": "opsisdalmatiac1@opsisdalmatiaoutreachseriac.com",
+      "smtp_key": "c1"
+    },
+    {
+      "key": "wellness",
+      "label": "Wellness centri i SPA",
+      "sheet_id": "101vebPGOtL8_YXmAKThNCX26agwr3hLqqYCpzrZxJEY",
+      "gid": "1496683364",
+      "sender_email": "opsisdalmatiac3@opsisdalmatiaoutreachseriac.com",
+      "smtp_key": "c3"
+    },
+    {
+      "key": "estetske",
+      "label": "Estetske poliklinike",
+      "sheet_id": "1LgToxUK30pEv7ySGePXGBbbT5NppYO7gY8zVxq3m5GU",
+      "gid": "1374875980",
+      "sender_email": "opsisdalmatiac4@opsisdalmatiaoutreachseriac.com",
+      "smtp_key": "c4"
+    }
+  ],
+  "global": {
+    "reply_to": "opsisdalmatia@gmail.com",
+    "sender_ime": "Tuta",
+    "calendly_url": "https://opsisdalmatia.com/besplatna-konzultacija",
+    "daily_limit_per_industry": 35,
+    "smtp_host": "smtp.hostinger.com",
+    "smtp_port": 465,
+    "smtp_secure": true,
+    "min_wait_between_sends_ms": 60000,
+    "max_wait_between_sends_ms": 180000,
+    "min_cycle_wait_ms": 900000,
+    "max_cycle_wait_ms": 1500000,
+    "session_max_runtime_ms": 3000000
+  }
+}

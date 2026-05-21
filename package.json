@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/send.js",
     "dry": "DRY_RUN=true node src/send.js",
-    "test-one": "node src/send.js --industry"
+    "test": "node test/run_all.js"
   },
   "dependencies": {
     "google-spreadsheet": "^4.1.4",

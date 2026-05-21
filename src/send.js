@@ -130,6 +130,7 @@ async function main() {
     log(`--- Cycle ${cycle} | remaining industries: ${remaining.length} ---`);
 
     const order = shuffle(remaining);
+    let progressMade = false;
     for (const industry of order) {
       const elapsed2 = Date.now() - startTime;
       if (elapsed2 > G.session_max_runtime_ms) break;
@@ -137,10 +138,16 @@ async function main() {
       const result = await processIndustry(industry, st);
 
       if (result === 'sent' || result === 'dry') {
+        progressMade = true;
         const wait = randInt(G.min_wait_between_sends_ms, G.max_wait_between_sends_ms);
         log(`Sleeping ${Math.round(wait / 1000)}s before next send...`);
         await sleep(wait);
       }
+    }
+
+    if (!progressMade) {
+      log(`No industry made progress this cycle (all errored or no eligible rows). Exiting to avoid spin.`);
+      break;
     }
 
     if (SKIP_CYCLE_WAIT || ONLY_INDUSTRY) {
@@ -158,7 +165,11 @@ async function main() {
   log(`DONE. Total sent today across industries: ${totalSent}. Per-industry: ${JSON.stringify(st.sent)}`);
 }
 
-main().catch(e => {
-  console.error('FATAL', e);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch(e => {
+    console.error('FATAL', e);
+    process.exit(1);
+  });
+}
+
+module.exports = { main, processIndustry };

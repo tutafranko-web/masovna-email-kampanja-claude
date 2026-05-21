@@ -27,7 +27,7 @@ function runSend(env, timeoutMs = 5000) {
 // Test 1: DRY_RUN+INDUSTRY=ortopedija - should attempt to read sheet and fail with clear SA error, NOT auto-sleep
 console.log('\n  Test: DRY_RUN=true INDUSTRY=ortopedija (no SA — expect quick error exit)');
 const r1 = runSend({ DRY_RUN: 'true', INDUSTRY: 'ortopedija' });
-assert('DRY_RUN+INDUSTRY printed start banner', r1.stdout.includes('Starting opsis-bulk-sender. DRY_RUN=true ONLY=ortopedija'));
+assert('DRY_RUN+INDUSTRY printed start banner', r1.stdout.includes('Starting masovna-email-kampanja-claude. DRY_RUN=true ONLY=ortopedija'));
 assert('DRY_RUN+INDUSTRY tried to read sheet', r1.stdout.includes('ortopedija') && r1.stdout.includes('Service account JSON not found'));
 assert('Exited (not hung)', r1.signal !== 'SIGTERM');
 

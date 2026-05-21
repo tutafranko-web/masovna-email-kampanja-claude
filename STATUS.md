@@ -25,18 +25,18 @@
 - [x] **Bug #2 fixed**: send.js spin-on-permanent-error → break if no progress made in cycle
 - [x] Fresh checkout simulated (kako će routine raditi) → exit 0.4s, no hang
 - [x] npm dependencies installed: google-spreadsheet@4.1.4, google-auth-library@9.14.1, nodemailer@6.9.16
-- [x] Git: 3 commit-a, main branch, remote=origin pointing to github.com/tutafranko-web/opsis-bulk-sender.git
+- [x] Git: 3 commit-a, main branch, remote=origin pointing to github.com/tutafranko-web/masovna-email-kampanja-claude.git
 - [x] gh CLI authenticated s novim PAT-om
 
 ## ⚠️ ČEKA TEBE (~5 min)
 
 ### 1. Kreiraj prazan repo (PAT nema Administration scope, ne mogu autonomno)
 - https://github.com/new
-- Name: `opsis-bulk-sender`, Private, NE dodaji README
+- Name: `masovna-email-kampanja-claude`, Private, NE dodaji README
 
 ### 2. Push
 ```bash
-cd "c:/Users/WWW/Desktop/ai/claude code/opsis-bulk-sender"
+cd "c:/Users/WWW/Desktop/ai/claude code/masovna-email-kampanja-claude"
 git push -u origin main
 ```
 
@@ -53,9 +53,9 @@ INDUSTRY=ortopedija LIMIT=1 node src/send.js      # send 1 real
 ```
 
 ### 5. Kreiraj Claude Routine kroz /schedule
-- Repo: `https://github.com/tutafranko-web/opsis-bulk-sender`
+- Repo: `https://github.com/tutafranko-web/masovna-email-kampanja-claude`
 - Cron: `0 7-15 * * 1-5`
-- Prompt: `cd opsis-bulk-sender && npm ci --silent && node src/send.js`
+- Prompt: `cd masovna-email-kampanja-claude && npm ci --silent && node src/send.js`
 - Tools: Bash, Model: `claude-sonnet-4-6`
 
 ### 6. PARALELNI RUN DAN 1

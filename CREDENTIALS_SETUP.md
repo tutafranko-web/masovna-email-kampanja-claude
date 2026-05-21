@@ -6,7 +6,7 @@ Repo se ne može aktivirati bez ova 2 fajla. Slijedi ovo kad se vratiš.
 
 ### Korak 1: Kreiraj Service Account
 1. Otvori https://console.cloud.google.com
-2. Kreiraj novi projekt (ili koristi postojeći) — npr. `opsis-bulk-sender`
+2. Kreiraj novi projekt (ili koristi postojeći) — npr. `masovna-email-kampanja-claude`
 3. Lijevi izbornik → **APIs & Services → Library** → traži "Google Sheets API" → **Enable**
 4. **APIs & Services → Credentials** → **Create credentials → Service account**
 5. Name: `opsis-sender`, Description: "Bulk email outreach sheet access"
@@ -87,9 +87,9 @@ INDUSTRY=ortopedija LIMIT=1 node src/send.js
 ## 5. Aktivacija Claude Routine
 
 Kad live test radi, kreiraj routine kroz `/schedule` skill u Claude Code-u s ovim parametrima:
-- Repo: `https://github.com/tutafranko-web/opsis-bulk-sender`
+- Repo: `https://github.com/tutafranko-web/masovna-email-kampanja-claude`
 - Cron: `0 7-15 * * 1-5` (08-16 Europe/Zagreb, weekdays)
-- Prompt: `cd opsis-bulk-sender && npm ci --silent && node src/send.js`
+- Prompt: `cd masovna-email-kampanja-claude && npm ci --silent && node src/send.js`
 - Allowed tools: `Bash`
 - Model: `claude-sonnet-4-6`
 - MCP: nikakve

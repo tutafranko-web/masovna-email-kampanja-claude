@@ -1,4 +1,4 @@
-# opsis-bulk-sender
+# masovna-email-kampanja-claude
 
 Bulk email outreach za Opsis Dalmatia — zamjena za 10 n8n workflowa.
 

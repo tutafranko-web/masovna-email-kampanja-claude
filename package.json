@@ -1,5 +1,5 @@
 {
-  "name": "opsis-bulk-sender",
+  "name": "masovna-email-kampanja-claude",
   "version": "1.0.0",
   "private": true,
   "description": "Opsis Dalmatia bulk email outreach — replaces 10 n8n workflows. Round-robin across 10 industries, SMTP send, Google Sheets dedup.",

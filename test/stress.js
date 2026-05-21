@@ -766,10 +766,10 @@ assert('smtp_port is 465 (SSL)', G.smtp_port === 465);
 assert('smtp_secure=true (port 465)', G.smtp_secure === true);
 
 // Throttle window sanity
-assert('min_wait_between_sends_ms >= 30s', G.min_wait_between_sends_ms >= 30000);
+assert('min_wait_between_sends_ms >= 10s (sheets+SMTP rate safety)', G.min_wait_between_sends_ms >= 10000);
 assert('max_wait_between_sends_ms >= min', G.max_wait_between_sends_ms >= G.min_wait_between_sends_ms);
 assert('max_wait_between_sends_ms <= 5min (sanity)', G.max_wait_between_sends_ms <= 300000);
-assert('min_cycle_wait_ms >= 5min', G.min_cycle_wait_ms >= 300000);
+assert('min_cycle_wait_ms >= 30s (look-human pacing)', G.min_cycle_wait_ms >= 30000);
 assert('max_cycle_wait_ms >= min', G.max_cycle_wait_ms >= G.min_cycle_wait_ms);
 assert('max_cycle_wait_ms <= 1hour', G.max_cycle_wait_ms <= 3600000);
 assert('session_max_runtime_ms is 50min (under 1h routine session)', G.session_max_runtime_ms <= 3600000);

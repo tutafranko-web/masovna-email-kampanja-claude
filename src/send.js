@@ -95,7 +95,7 @@ async function processIndustry(industry, st) {
 }
 
 async function main() {
-  log(`Starting opsis-bulk-sender. DRY_RUN=${DRY_RUN} ONLY=${ONLY_INDUSTRY || 'all'} LIMIT_OVERRIDE=${LIMIT_OVERRIDE ?? 'default'}`);
+  log(`Starting masovna-email-kampanja-claude. DRY_RUN=${DRY_RUN} ONLY=${ONLY_INDUSTRY || 'all'} LIMIT_OVERRIDE=${LIMIT_OVERRIDE ?? 'default'}`);
   const startTime = Date.now();
 
   let pool = INDUSTRIES;

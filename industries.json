@@ -89,10 +89,10 @@
     "smtp_host": "smtp.hostinger.com",
     "smtp_port": 465,
     "smtp_secure": true,
-    "min_wait_between_sends_ms": 60000,
-    "max_wait_between_sends_ms": 180000,
-    "min_cycle_wait_ms": 900000,
-    "max_cycle_wait_ms": 1500000,
+    "min_wait_between_sends_ms": 20000,
+    "max_wait_between_sends_ms": 60000,
+    "min_cycle_wait_ms": 60000,
+    "max_cycle_wait_ms": 180000,
     "session_max_runtime_ms": 3000000
   }
 }

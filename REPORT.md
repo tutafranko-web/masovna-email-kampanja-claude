@@ -30,7 +30,7 @@
 
 ### 1. Kreiraj prazan repo na github.com (5 sekundi)
 - Otvori https://github.com/new
-- **Repository name**: `opsis-bulk-sender`
+- **Repository name**: `masovna-email-kampanja-claude`
 - **Owner**: `tutafranko-web`
 - **Private** ✓
 - **NE** dodaji README/license/.gitignore (već imamo lokalno)
@@ -38,7 +38,7 @@
 
 ### 2. Push
 ```bash
-cd "c:/Users/WWW/Desktop/ai/claude code/opsis-bulk-sender"
+cd "c:/Users/WWW/Desktop/ai/claude code/masovna-email-kampanja-claude"
 git push -u origin main
 ```
 (gh CLI je već autenticiran s tvojim novim PAT-om)
@@ -57,9 +57,9 @@ INDUSTRY=ortopedija LIMIT=1 node src/send.js      # pošalje 1 stvarni email iz 
 ```
 
 ### 5. Kreiraj routine (kroz /schedule)
-- Repo: `https://github.com/tutafranko-web/opsis-bulk-sender`
+- Repo: `https://github.com/tutafranko-web/masovna-email-kampanja-claude`
 - Cron: `0 7-15 * * 1-5`
-- Prompt: `cd opsis-bulk-sender && npm ci --silent && node src/send.js`
+- Prompt: `cd masovna-email-kampanja-claude && npm ci --silent && node src/send.js`
 - Tools: Bash, Model: `claude-sonnet-4-6`
 
 ### 6. Paralelni run 1 dan, pa gasi n8n

@@ -108,6 +108,33 @@ PARSED OK: 17 files
   - INDUSTRY=ortopedija propagates, unknown rejected with exit 1
   - LIMIT override reflected
 
+# stress.js (added 2026-05-21 in 2nd session)
+400 pass, 0 fail
+  - Filter stress: 67 assertions (cap 0/1/4/5/100/10000, status variants incl. whitespace,
+    email_found null/undefined/no/yes, all_emails malformed, step -1/NaN/null/string,
+    delay boundaries to 0.01d precision, future dates, 1k+ row batches)
+  - Variant stress: 51 assertions (all V1-V9 branches with weird types, boundary numbers,
+    case-sensitivity, all 10 chatbot industries, precedence rules)
+  - Template stress: 60+ assertions (Unicode, emoji, 5000-char title, 100kb Grad,
+    phone formats x6, multi-email, trailing comma, deterministic 100x render)
+  - State stress: 40 assertions (corrupted JSON, missing date, stale/future date,
+    industries not in config, non-numeric counter, save→load roundtrip)
+  - E2E mock stress: 30+ assertions across 12 scenarios (100-row queue, 50% SMTP fail,
+    10 industries indep caps, DRY_RUN, empty sheets, sheet throws, sheet update fails
+    AFTER successful SMTP — state increments anyway to prevent double-send)
+  - Config invariants: 60+ assertions (unique sender_emails, unique smtp_keys, 3 domains,
+    SMTP host/port, daily_limit sanity)
+  - Phone formatting: 15 assertions (+385, 00385, leading 0, no prefix, with dashes,
+    null/undefined, international formats)
+  - Template placeholder coverage: 30+ assertions (no unknown {{vars}}, sender_ime in
+    ≥4 templates per industry, subject < 100 chars, all {{...}} pairs balanced)
+  - Idempotency: 3 assertions (row not re-eligible after step++, mid-batch correctness)
+  - Security / sanitization: 6 assertions (SQL-like injection literal, no template
+    recursion, no eval/Function in template.js, email trim)
+  - Cycle timing math: 4 assertions + INFORMATIONAL output (see "Throughput Finding" below)
+  - Repeated run simulation: 7 assertions (50 calls in row → exactly 35 sent + capped,
+    process restart preserves state)
+
 ============================================================
 FINAL SUMMARY
 ============================================================
@@ -117,7 +144,55 @@ FINAL SUMMARY
   PASS  error_handling.js
   PASS  e2e_mock.js
   PASS  env_vars.js
+  PASS  stress.js          (400 assertions)
+
+TOTAL across all test files: ~460+ assertions, all passing
 ```
+
+## ⚠️ THROUGHPUT FINDING (otkrio stress test, ZAHTIJEVA TVOJU ODLUKU)
+
+Kalkulirao sam stvarni throughput tvoje arhitekture (round-robin s 60-180s waitom između sendova i 15-25min waitom između ciklusa):
+
+```
+Cycle time = 10 industrija × 120s send-wait (avg) + 20min cycle-wait (avg) = 40 min
+Cycles per routine fire (50min budget) = 1
+Fires per day (cron 0 7-15 weekdays) = 9
+Effective emails/industry/day = 9   ← target je 35
+```
+
+**Tvoj zahtjev je bio: 35 emailova/industriji/dan.** Trenutna konfiguracija u `industries.json` daje **maksimalno 9/industriji/dan** (= 90 total umjesto 350). Ja sam to ostavio kako je jer si ti eksplicitno tražio 15-25min wait, ali to NE FITA s 35/dan ciljem.
+
+### Tri opcije za fix (treba tvoja odluka):
+
+**Opcija A — Smanji cycle wait (preporuka, najjednostavnije)**
+U `industries.json` global mijenja se:
+```diff
+- "min_cycle_wait_ms": 900000,    // 15 min
+- "max_cycle_wait_ms": 1500000,   // 25 min
++ "min_cycle_wait_ms": 120000,    // 2 min
++ "max_cycle_wait_ms": 240000,    // 4 min
+```
+Cycle postaje ~23min, fits 2 cycles po fireu × 9 fires = 18 cycles/dan = 18 emailova/industriji.
+Da bi došli do 35, treba i send wait niži:
+```diff
+- "min_wait_between_sends_ms": 60000,    // 60s
+- "max_wait_between_sends_ms": 180000,   // 180s
++ "min_wait_between_sends_ms": 20000,    // 20s
++ "max_wait_between_sends_ms": 60000,    // 60s
+```
+Cycle = 10×40s + 3min = 9.7min → 5 cycles/fire × 9 = 45 cycles = cap 35 hit. ✓
+
+**Opcija B — Batch mode (kompleksniji)**
+Pošalji K=3 emaila per industrija per ciklus umjesto 1. Treba refaktor `send.js`. Cycle = 10 × 3 × 120s + 20min = 80min — ne stane u session budget. Ne valja.
+
+**Opcija C — Prihvati nižu cap (najsigurnije)**
+Ostavi 15-25min wait. Stvarna cap je 9/industriji/dan = 90 emailova/dan total. Smanji `daily_limit_per_industry` u industries.json na 10 da match reality. Spori outreach ali siguran.
+
+### Što ja preporučujem
+
+**Opcija A.** SMTP send waiti od 20-60s su daleko ispod bilo kojeg deliverability thresholda (35 emailova/h iz 10 različitih accounta), a 2-4min cycle wait je dovoljan za sheets quota (60 read/min limit). Brže ćeš proći listu, prije ćeš dobiti rezultate, isti 35/dan target.
+
+**Promijeni industries.json sam ili reci mi "primijeni Opciju A" pa ću ja.**
 
 ## Bugovi nađeni i ispravljeni (autonomno)
 

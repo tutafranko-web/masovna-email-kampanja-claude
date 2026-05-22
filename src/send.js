@@ -36,12 +36,16 @@ function shuffle(arr) {
   return a;
 }
 
+function countSentToday(rows) {
+  const today = new Date().toISOString().slice(0, 10);
+  return rows.filter(r => {
+    const ts = String(r.email_last_sent_at || '');
+    return ts.startsWith(today);
+  }).length;
+}
+
 async function processIndustry(industry, st) {
   const dailyLimit = LIMIT_OVERRIDE !== null ? LIMIT_OVERRIDE : G.daily_limit_per_industry;
-  if (st.sent[industry.key] >= dailyLimit) {
-    log(`[${industry.key}] skip — already sent ${st.sent[industry.key]}/${dailyLimit} today`);
-    return 'capped';
-  }
 
   let rows;
   try {
@@ -51,9 +55,22 @@ async function processIndustry(industry, st) {
     return 'error';
   }
 
-  const eligible = filter.filterEligible(rows, dailyLimit);
+  // Daily cap source: MAX of (a) sheet's email_last_sent_at column counted for today,
+  // (b) session-local state.sent counter. (a) survives across cloud routine sessions,
+  // (b) prevents same-session overshoot if sheet writes are slow/cached.
+  const sheetSentToday = countSentToday(rows);
+  const sessionSent = st.sent[industry.key] || 0;
+  const effectiveCount = Math.max(sessionSent, sheetSentToday);
+  st.sent[industry.key] = effectiveCount;
+  if (effectiveCount >= dailyLimit) {
+    log(`[${industry.key}] skip — already sent ${effectiveCount}/${dailyLimit} today (sheet=${sheetSentToday}, session=${sessionSent})`);
+    return 'capped';
+  }
+
+  const remaining = dailyLimit - effectiveCount;
+  const eligible = filter.filterEligible(rows, remaining);
   if (!eligible.length) {
-    log(`[${industry.key}] no eligible rows`);
+    log(`[${industry.key}] no eligible rows (sent today=${effectiveCount}/${dailyLimit})`);
     return 'no-eligible';
   }
 

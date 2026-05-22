@@ -86,7 +86,7 @@
     "sender_ime": "Tuta",
     "calendly_url": "https://opsisdalmatia.com/besplatna-konzultacija",
     "daily_limit_per_industry": 35,
-    "smtp_host": "smtp.hostinger.com",
+    "smtp_host": "mail.privateemail.com",
     "smtp_port": 465,
     "smtp_secure": true,
     "min_wait_between_sends_ms": 20000,

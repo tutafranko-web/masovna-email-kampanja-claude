@@ -8,13 +8,16 @@ function assert(name, cond, info) {
   else { fail++; console.log('  ✗ FAIL:', name, info ? '— ' + info : ''); }
 }
 
-// Test 1: sheets.js throws clean error when SA JSON missing
+// Test 1: sheets.js throws clean error when no Google credentials present
 console.log('=== Missing credentials handling ===');
 const SA = path.resolve(__dirname, '..', 'credentials', 'service-account.json');
+const OAUTH = path.resolve(__dirname, '..', 'credentials', 'oauth.json');
 const SMTP = path.resolve(__dirname, '..', 'credentials', 'smtp.json');
 const backupSA = fs.existsSync(SA) ? fs.readFileSync(SA) : null;
+const backupOAUTH = fs.existsSync(OAUTH) ? fs.readFileSync(OAUTH) : null;
 const backupSMTP = fs.existsSync(SMTP) ? fs.readFileSync(SMTP) : null;
 if (backupSA) fs.unlinkSync(SA);
+if (backupOAUTH) fs.unlinkSync(OAUTH);
 if (backupSMTP) fs.unlinkSync(SMTP);
 
 const sheets = require('../src/sheets');
@@ -25,7 +28,7 @@ const smtp = require('../src/smtp');
     await sheets.readRows('fakeId', '0');
     assert('sheets.readRows without SA should throw', false, 'no error thrown');
   } catch (e) {
-    assert('sheets error has clear message', e.message.includes('Service account JSON not found') && e.message.includes('CREDENTIALS_SETUP.md'), e.message);
+    assert('sheets error has clear message', e.message.includes('No Google credentials found') && e.message.includes('CREDENTIALS_SETUP.md'), e.message);
   }
 
   try {
@@ -37,6 +40,7 @@ const smtp = require('../src/smtp');
 
   // Restore
   if (backupSA) fs.writeFileSync(SA, backupSA);
+  if (backupOAUTH) fs.writeFileSync(OAUTH, backupOAUTH);
   if (backupSMTP) fs.writeFileSync(SMTP, backupSMTP);
 
   // Test 2: SMTP with wrong key

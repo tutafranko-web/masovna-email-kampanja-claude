@@ -1,23 +1,31 @@
 const { GoogleSpreadsheet } = require('google-spreadsheet');
-const { JWT } = require('google-auth-library');
+const { OAuth2Client, JWT } = require('google-auth-library');
 const path = require('path');
 const fs = require('fs');
 
 const SA_PATH = path.resolve(__dirname, '..', 'credentials', 'service-account.json');
+const OAUTH_PATH = path.resolve(__dirname, '..', 'credentials', 'oauth.json');
 
-let jwtClient = null;
+let authClient = null;
 function getAuth() {
-  if (jwtClient) return jwtClient;
-  if (!fs.existsSync(SA_PATH)) {
-    throw new Error(`Service account JSON not found at ${SA_PATH}. See CREDENTIALS_SETUP.md.`);
+  if (authClient) return authClient;
+  if (fs.existsSync(OAUTH_PATH)) {
+    const c = JSON.parse(fs.readFileSync(OAUTH_PATH, 'utf8'));
+    const oauth = new OAuth2Client(c.client_id, c.client_secret);
+    oauth.setCredentials({ refresh_token: c.refresh_token });
+    authClient = oauth;
+    return authClient;
   }
-  const sa = JSON.parse(fs.readFileSync(SA_PATH, 'utf8'));
-  jwtClient = new JWT({
-    email: sa.client_email,
-    key: sa.private_key,
-    scopes: ['https://www.googleapis.com/auth/spreadsheets']
-  });
-  return jwtClient;
+  if (fs.existsSync(SA_PATH)) {
+    const sa = JSON.parse(fs.readFileSync(SA_PATH, 'utf8'));
+    authClient = new JWT({
+      email: sa.client_email,
+      key: sa.private_key,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets']
+    });
+    return authClient;
+  }
+  throw new Error(`No Google credentials found. Expected one of:\n  - ${OAUTH_PATH} (OAuth2 refresh token)\n  - ${SA_PATH} (Service Account JSON)\nSee CREDENTIALS_SETUP.md.`);
 }
 
 const docCache = new Map();

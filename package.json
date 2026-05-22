@@ -7,6 +7,8 @@
   "scripts": {
     "start": "node src/send.js",
     "dry": "DRY_RUN=true node src/send.js",
+    "verify": "node src/verify.js",
+    "verify-dry": "DRY_RUN=true node src/verify.js",
     "test": "node test/run_all.js"
   },
   "dependencies": {

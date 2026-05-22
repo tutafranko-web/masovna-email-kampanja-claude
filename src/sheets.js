@@ -65,4 +65,44 @@ async function updateRow(row, updates) {
   await row.save();
 }
 
-module.exports = { readRows, updateRow, getSheet };
+async function ensureColumn(sheetId, gid, columnName) {
+  const sheet = await getSheet(sheetId, gid);
+  if (sheet.headerValues.includes(columnName)) return sheet.headerValues.indexOf(columnName);
+  const newColIndex = sheet.headerValues.length;
+  if (sheet.columnCount < newColIndex + 1) {
+    await sheet.resize({ rowCount: sheet.rowCount, columnCount: newColIndex + 1 });
+  }
+  const newHeaders = [...sheet.headerValues, columnName];
+  await sheet.setHeaderRow(newHeaders);
+  docCache.delete(`${sheetId}:${gid}`);
+  const fresh = await getSheet(sheetId, gid);
+  return fresh.headerValues.indexOf(columnName);
+}
+
+async function bulkUpdateColumn(sheetId, gid, columnName, rowValues) {
+  // rowValues: Map<rowNumber (1-indexed), string value>
+  const colIndex = await ensureColumn(sheetId, gid, columnName);
+  const sheet = await getSheet(sheetId, gid);
+  const rowNums = Array.from(rowValues.keys()).sort((a, b) => a - b);
+  if (!rowNums.length) return 0;
+  const minRow = rowNums[0];
+  const maxRow = rowNums[rowNums.length - 1];
+  await sheet.loadCells({
+    startRowIndex: minRow - 1,
+    endRowIndex: maxRow,
+    startColumnIndex: colIndex,
+    endColumnIndex: colIndex + 1
+  });
+  let updated = 0;
+  for (const [rowNum, value] of rowValues.entries()) {
+    const cell = sheet.getCell(rowNum - 1, colIndex);
+    if (cell.value !== value) {
+      cell.value = value;
+      updated++;
+    }
+  }
+  if (updated > 0) await sheet.saveUpdatedCells();
+  return updated;
+}
+
+module.exports = { readRows, updateRow, getSheet, ensureColumn, bulkUpdateColumn };

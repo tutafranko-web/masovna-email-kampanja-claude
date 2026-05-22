@@ -761,7 +761,7 @@ for (const ind of INDUSTRIES) {
 assert('Exactly 3 sender domains (a, b, c)', Object.keys(domainCounts).length === 3);
 
 // SMTP host/port sanity
-assert('smtp_host is hostinger', G.smtp_host === 'smtp.hostinger.com');
+assert('smtp_host is mail.privateemail.com (Namecheap)', G.smtp_host === 'mail.privateemail.com');
 assert('smtp_port is 465 (SSL)', G.smtp_port === 465);
 assert('smtp_secure=true (port 465)', G.smtp_secure === true);
 

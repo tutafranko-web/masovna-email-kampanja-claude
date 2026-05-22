@@ -7,6 +7,8 @@ function filterEligible(rows, dailyLimit) {
     if (!emailFound || emailFound.toLowerCase() === 'no') return false;
     const verified = String(r.email_verified || '').trim().toLowerCase();
     if (verified === 'no') return false;
+    const apiResult = String(r.email_verified_api || '').trim().toLowerCase();
+    if (apiResult === 'failed') return false;
     const allEmails = String(r.all_emails || '').trim();
     if (!allEmails.includes('@')) return false;
     const status = String(r.email_status || 'active').toLowerCase();

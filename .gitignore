@@ -4,3 +4,4 @@ node_modules/
 _n8n_extract/
 credentials/*.json
 !credentials/*.example.json
+state/verify-report-*.json

@@ -30,9 +30,16 @@ const smtpMock = {
   }
 };
 
+const emailcheckMock = {
+  verify: async (email) => ({ status: 'passed', event: 'mailbox_exists', email, creditsRemaining: 9999 }),
+  clearCache: () => {},
+  getCacheSize: () => 0
+};
+
 // Install mocks BEFORE requiring send.js
 require.cache[require.resolve('../src/sheets')] = { exports: sheetsMock };
 require.cache[require.resolve('../src/smtp')] = { exports: smtpMock };
+require.cache[require.resolve('../src/emailcheck')] = { exports: emailcheckMock };
 
 // Clean state
 const STATE_PATH = path.resolve(__dirname, '..', 'state', 'today.json');

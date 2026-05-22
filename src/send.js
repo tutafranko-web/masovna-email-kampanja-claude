@@ -16,6 +16,9 @@ const template = require('./template');
 const sheets = require('./sheets');
 const smtp = require('./smtp');
 const state = require('./state');
+const emailcheck = require('./emailcheck');
+
+const SKIP_API_CHECK = process.env.SKIP_API_CHECK === 'true' || process.env.SKIP_API_CHECK === '1';
 
 function log(...args) {
   const ts = new Date().toISOString();
@@ -65,6 +68,29 @@ async function processIndustry(industry, st) {
 
   log(`[${industry.key}] -> ${email.to} | step ${row.email_step || 0}->${email.nextStep} | variant ${row.email_variant} | "${email.subject}"`);
 
+  // JIT API verification (skip if already API-checked or explicitly disabled)
+  const existingApi = String(row.email_verified_api || '').trim().toLowerCase();
+  let apiResult = null;
+  if (!SKIP_API_CHECK && !['passed', 'unknown'].includes(existingApi)) {
+    try {
+      apiResult = await emailcheck.verify(email.to);
+      log(`[${industry.key}] API check: ${apiResult.status}/${apiResult.event} (creditsRemaining=${apiResult.creditsRemaining ?? '?'})`);
+      if (apiResult.status === 'failed') {
+        if (!DRY_RUN) {
+          try {
+            await sheets.updateRow(row.__row, {
+              email_verified_api: 'failed',
+              email_verified_api_event: apiResult.event || ''
+            });
+          } catch (e) { log(`[${industry.key}] WARN sheet update (failed mark) failed: ${e.message}`); }
+        }
+        return 'api-failed';
+      }
+    } catch (e) {
+      log(`[${industry.key}] API check error (proceeding to send anyway): ${e.message}`);
+    }
+  }
+
   if (DRY_RUN) {
     log(`[${industry.key}] DRY_RUN — not sending, not updating sheet`);
     return 'dry';
@@ -79,12 +105,17 @@ async function processIndustry(industry, st) {
 
   try {
     const nowIso = new Date().toISOString();
-    await sheets.updateRow(row.__row, {
+    const updates = {
       email_step: email.nextStep,
       email_last_sent_at: nowIso,
       email_last_variant: row.email_variant,
       email_last_subject: email.subject
-    });
+    };
+    if (apiResult) {
+      updates.email_verified_api = apiResult.status;
+      updates.email_verified_api_event = apiResult.event || '';
+    }
+    await sheets.updateRow(row.__row, updates);
   } catch (e) {
     log(`[${industry.key}] WARN sheet update failed (email already sent!): ${e.message}`);
   }

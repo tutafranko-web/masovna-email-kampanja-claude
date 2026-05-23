@@ -75,8 +75,7 @@ function isNoise(msg) {
   if (from.includes('dmarc') || subj.includes('dmarc')) return true;
   if (/report.?(domain|id)/i.test(subj)) return true;
   if (subj.startsWith('[preview]')) return true;
-  // Self-test emails (warmup tools send from mailbox to itself)
-  if (from === 'opsisdalmatia' || /opsisdalmatia[a-c]\d@opsisdalmatiaoutreachseria[a-c]\.com/i.test(from)) return true;
+  // Self-test emails (warmup tools send from mailbox to itself with this subject)
   if (subj.includes('test email to check account')) return true;
   // Email warmup services (use double-underscore tag patterns)
   if (/__/.test(subj)) return true;

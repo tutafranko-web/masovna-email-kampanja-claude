@@ -1,13 +1,11 @@
 // Reply monitor: polls IMAP for all 12 mailboxes, sends gmail notification
-// to NOTIFY_TO when new unread replies arrive.
-//
-// State (state/reply_seen.json): {<mailbox_user>: <max_uid_seen>}
-// IMAP UIDs are monotonically increasing, so we only fetch UIDs > max_uid_seen.
+// to NOTIFY_TO when new UNSEEN replies arrive. Uses IMAP \Seen flag as state —
+// no local state file needed, survives cloud routine restarts.
 //
 // env vars:
 //   NOTIFY_TO=tutafranko@gmail.com (default)
-//   DRY_RUN=true        - log only, don't send notification
-//   INIT=true           - mark current max UID per mailbox, no notification (run once at setup)
+//   DRY_RUN=true        - log only, don't send notification, don't mark seen
+//   INIT=true           - mark ALL UNSEEN mails as Seen without notifying (baseline)
 
 const fs = require('fs');
 const path = require('path');
@@ -20,22 +18,11 @@ const INIT = process.env.INIT === 'true';
 const IMAP_HOST = 'mail.privateemail.com';
 const IMAP_PORT = 993;
 
-const STATE_PATH = path.resolve(__dirname, '..', 'state', 'reply_seen.json');
 const SMTP_PATH = path.resolve(__dirname, '..', 'credentials', 'smtp.json');
 
 function log(...args) { console.log(`[${new Date().toISOString()}]`, ...args); }
 
-function loadState() {
-  try { return JSON.parse(fs.readFileSync(STATE_PATH, 'utf8')); }
-  catch { return {}; }
-}
-
-function saveState(state) {
-  fs.mkdirSync(path.dirname(STATE_PATH), { recursive: true });
-  fs.writeFileSync(STATE_PATH, JSON.stringify(state, null, 2));
-}
-
-async function checkMailbox(user, pass, sinceUid) {
+async function withConnection(user, pass, fn) {
   const cfg = {
     imap: {
       user, password: pass,
@@ -45,15 +32,21 @@ async function checkMailbox(user, pass, sinceUid) {
     }
   };
   const conn = await imaps.connect(cfg);
-  await conn.openBox('INBOX');
-  // UID range: sinceUid+1 to *
-  const range = `${sinceUid + 1}:*`;
-  const messages = await conn.search([['UID', range]], {
+  try {
+    await conn.openBox('INBOX');
+    return await fn(conn);
+  } finally {
+    try { await conn.end(); } catch {}
+  }
+}
+
+async function fetchUnseen(conn) {
+  const messages = await conn.search(['UNSEEN'], {
     bodies: ['HEADER.FIELDS (FROM SUBJECT DATE MESSAGE-ID)'],
     struct: false,
     markSeen: false
   });
-  const result = messages.map(m => {
+  return messages.map(m => {
     const hdr = m.parts.find(p => p.which.includes('HEADER')) || {};
     const h = hdr.body || {};
     return {
@@ -63,24 +56,37 @@ async function checkMailbox(user, pass, sinceUid) {
       date: (h.date || ['?'])[0],
       messageId: (h['message-id'] || ['?'])[0]
     };
-  }).filter(m => m.uid > sinceUid); // belt-and-suspenders: IMAP servers sometimes include sinceUid itself
-  await conn.end();
-  return result;
+  });
 }
 
-async function getMaxUid(user, pass) {
-  const cfg = {
-    imap: {
-      user, password: pass,
-      host: IMAP_HOST, port: IMAP_PORT, tls: true,
-      authTimeout: 15000, connTimeout: 15000,
-      tlsOptions: { rejectUnauthorized: false }
-    }
-  };
-  const conn = await imaps.connect(cfg);
-  const box = await conn.openBox('INBOX');
-  await conn.end();
-  return box.uidnext - 1;
+async function markSeen(conn, uids) {
+  if (!uids.length) return;
+  // imap-simple expects an array of UIDs; addFlags adds \Seen
+  await conn.addFlags(uids, '\\Seen');
+}
+
+function isNoise(msg) {
+  const from = (msg.from || '').toLowerCase();
+  const subj = (msg.subject || '').toLowerCase();
+  // Bounces / system
+  if (from.includes('mailer-daemon') || from.includes('postmaster')) return true;
+  if (subj.startsWith('undelivered') || subj.startsWith('delivery status')) return true;
+  // DMARC / SPF / DKIM reports
+  if (from.includes('dmarc') || subj.includes('dmarc')) return true;
+  if (/report.?(domain|id)/i.test(subj)) return true;
+  if (subj.startsWith('[preview]')) return true;
+  // Self-test emails (warmup tools send from mailbox to itself)
+  if (from === 'opsisdalmatia' || /opsisdalmatia[a-c]\d@opsisdalmatiaoutreachseria[a-c]\.com/i.test(from)) return true;
+  if (subj.includes('test email to check account')) return true;
+  // Email warmup services (use double-underscore tag patterns)
+  if (/__/.test(subj)) return true;
+  if (subj.includes('warmup') || subj.includes('warm-up')) return true;
+  if (subj.includes('happy-money')) return true;
+  // Auto-replies / OOO
+  if (subj.startsWith('out of office') || subj.startsWith('automatic reply')) return true;
+  if (subj.startsWith('auto:') || subj.startsWith('autoreply')) return true;
+  if (subj.includes('vacation') && subj.includes('reply')) return true;
+  return false;
 }
 
 async function notify(replies) {
@@ -92,15 +98,10 @@ async function notify(replies) {
     auth: { user: sender.user, pass: sender.pass }
   });
   const lines = replies.map(r =>
-    `📨 ${r.mailbox}\n   FROM: ${r.from}\n   SUBJECT: ${r.subject}\n   DATE: ${r.date}\n   UID: ${r.uid}`
+    `📨 ${r.mailbox}\n   FROM: ${r.from}\n   SUBJECT: ${r.subject}\n   DATE: ${r.date}`
   ).join('\n\n');
   const subject = `🔔 ${replies.length} NOVI ODGOVOR${replies.length > 1 ? 'A' : ''} — Opsis outreach`;
-  const body = `Stigli su novi mailovi u Privatemail mailboxove:\n\n${lines}\n\n---\nOtvori webmail: https://privateemail.com\nLogin s odgovarajucim mailboxom + sifra Ftmj16..`;
-  if (DRY_RUN) {
-    log('DRY_RUN — would notify:');
-    console.log(body);
-    return;
-  }
+  const body = `Stigli su novi mailovi u Privatemail mailboxove:\n\n${lines}\n\n---\nOtvori webmail: https://privateemail.com`;
   const info = await t.sendMail({
     from: sender.user,
     to: NOTIFY_TO,
@@ -113,55 +114,78 @@ async function notify(replies) {
 async function main() {
   log(`reply_monitor start. NOTIFY_TO=${NOTIFY_TO} DRY_RUN=${DRY_RUN} INIT=${INIT}`);
   const smtps = JSON.parse(fs.readFileSync(SMTP_PATH, 'utf8'));
-  const state = loadState();
   const newReplies = [];
+  let totalUnseen = 0, totalNoise = 0, totalReal = 0;
 
   for (const [key, c] of Object.entries(smtps)) {
     try {
-      if (INIT) {
-        const maxUid = await getMaxUid(c.user, c.pass);
-        state[c.user] = maxUid;
-        log(`[${key}] ${c.user}: maxUid=${maxUid} (marked as baseline)`);
-        continue;
-      }
-      const sinceUid = state[c.user] || 0;
-      const msgs = await checkMailbox(c.user, c.pass, sinceUid);
-      // Filter noise — warmup service, bounces, auto-replies, OOO
-      const real = msgs.filter(m => {
-        const from = (m.from || '').toLowerCase();
-        const subj = (m.subject || '').toLowerCase();
-        if (from.includes('mailer-daemon') || from.includes('postmaster')) return false;
-        if (subj.startsWith('undelivered') || subj.startsWith('delivery status')) return false;
-        if (subj.includes('desert__ranch') || subj.includes('warmup')) return false;
-        if (subj.startsWith('out of office') || subj.startsWith('automatic reply')) return false;
-        if (subj.startsWith('auto:') || subj.startsWith('autoreply')) return false;
-        if (subj.includes('vacation') && subj.includes('reply')) return false;
-        return true;
+      await withConnection(c.user, c.pass, async (conn) => {
+        const unseen = await fetchUnseen(conn);
+        totalUnseen += unseen.length;
+        const noise = unseen.filter(isNoise);
+        const real = unseen.filter(m => !isNoise(m));
+        totalNoise += noise.length;
+        totalReal += real.length;
+
+        log(`[${key}] ${c.user}: ${unseen.length} unseen, ${noise.length} noise, ${real.length} actionable`);
+
+        if (INIT) {
+          // Mark everything seen, don't notify
+          if (!DRY_RUN && unseen.length > 0) {
+            await markSeen(conn, unseen.map(m => m.uid));
+          }
+          return;
+        }
+
+        // Mark noise as seen so we don't process again
+        if (!DRY_RUN && noise.length > 0) {
+          await markSeen(conn, noise.map(m => m.uid));
+        }
+
+        for (const r of real) newReplies.push({ ...r, mailbox: c.user });
+
+        // Mark real replies as seen AFTER we successfully notify
+        // (done below in main, not here, so we don't mark-seen if notify fails)
       });
-      log(`[${key}] ${c.user}: sinceUid=${sinceUid}, ${msgs.length} new, ${real.length} actionable`);
-      for (const r of real) newReplies.push({ ...r, mailbox: c.user });
-      // Update high watermark
-      if (msgs.length > 0) {
-        state[c.user] = Math.max(state[c.user] || 0, ...msgs.map(m => m.uid));
-      }
     } catch (e) {
       log(`[${key}] ERROR ${c.user}: ${e.message.slice(0, 100)}`);
     }
   }
 
+  log(`Totals: ${totalUnseen} unseen, ${totalNoise} noise, ${totalReal} actionable`);
+
   if (INIT) {
-    saveState(state);
-    log('INIT done — baseline saved, run again to start monitoring');
+    log('INIT done — all current unseen marked as Seen baseline');
     return;
   }
 
-  log(`Total actionable replies: ${newReplies.length}`);
-
-  if (newReplies.length > 0) {
+  if (newReplies.length > 0 && !DRY_RUN) {
     await notify(newReplies);
+    // After successful notify, mark them as Seen so next run doesn't re-notify
+    // Re-connect per mailbox to mark
+    const byMailbox = {};
+    for (const r of newReplies) {
+      byMailbox[r.mailbox] = byMailbox[r.mailbox] || [];
+      byMailbox[r.mailbox].push(r.uid);
+    }
+    for (const [mailbox, uids] of Object.entries(byMailbox)) {
+      const cred = Object.values(smtps).find(s => s.user === mailbox);
+      try {
+        await withConnection(cred.user, cred.pass, async (conn) => {
+          await markSeen(conn, uids);
+        });
+        log(`marked ${uids.length} as Seen in ${mailbox}`);
+      } catch (e) {
+        log(`WARN markSeen failed for ${mailbox}: ${e.message}`);
+      }
+    }
+  } else if (newReplies.length > 0 && DRY_RUN) {
+    log('DRY_RUN — would notify these:');
+    for (const r of newReplies) {
+      console.log(`  ${r.mailbox} | FROM: ${r.from} | SUBJECT: ${r.subject}`);
+    }
   }
 
-  saveState(state);
   log('done');
 }
 
@@ -169,4 +193,4 @@ if (require.main === module) {
   main().catch(e => { console.error('FATAL', e); process.exit(1); });
 }
 
-module.exports = { main, checkMailbox };
+module.exports = { main };

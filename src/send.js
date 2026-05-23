@@ -95,6 +95,10 @@ async function processIndustry(industry, st) {
       if (apiResult.status === 'failed') {
         if (!DRY_RUN) {
           try {
+            // Ensure columns exist before write (google-spreadsheet silently
+            // drops writes to unknown headers — same issue we hit before).
+            await sheets.ensureColumn(industry.sheet_id, industry.gid, 'email_verified_api');
+            await sheets.ensureColumn(industry.sheet_id, industry.gid, 'email_verified_api_event');
             await sheets.updateRow(row.__row, {
               email_verified_api: 'failed',
               email_verified_api_event: apiResult.event || ''
@@ -131,6 +135,8 @@ async function processIndustry(industry, st) {
     if (apiResult) {
       updates.email_verified_api = apiResult.status;
       updates.email_verified_api_event = apiResult.event || '';
+      await sheets.ensureColumn(industry.sheet_id, industry.gid, 'email_verified_api');
+      await sheets.ensureColumn(industry.sheet_id, industry.gid, 'email_verified_api_event');
     }
     await sheets.updateRow(row.__row, updates);
   } catch (e) {

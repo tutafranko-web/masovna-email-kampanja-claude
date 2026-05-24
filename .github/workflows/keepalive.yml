@@ -1,0 +1,22 @@
+name: Keepalive (prevent 60-day cron disable)
+
+# GitHub Actions disable-uje scheduled workflows nakon 60 dana inaktivnosti repo-a.
+# Ovaj workflow svaki 1. u mjesecu napravi dummy commit/API call koji resetira
+# clock. Time osigurava da sender + reply_monitor cron-ovi nikad ne prestanu raditi.
+
+on:
+  schedule:
+    - cron: '0 12 1 * *'  # 1. u mjesecu, 12:00 UTC
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+    steps:
+      - uses: gautamkrishnar/keepalive-workflow@v2
+        with:
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
+          time_elapsed: 45

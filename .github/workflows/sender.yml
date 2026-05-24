@@ -1,0 +1,39 @@
+name: Opsis Bulk Sender
+
+on:
+  schedule:
+    # 0 7-15 * * *  = svaki sat od 9:00 do 17:00 Zagreb (CEST = UTC+2)
+    # GH cron na free tier može kasniti do 15 min — to je OK
+    - cron: '0 7-15 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: opsis-sender
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Write credentials
+        env:
+          OAUTH_JSON: ${{ secrets.OAUTH_JSON }}
+          SMTP_JSON: ${{ secrets.SMTP_JSON }}
+          BULKEMAIL_API_KEY: ${{ secrets.BULKEMAIL_API_KEY }}
+        run: |
+          mkdir -p credentials state
+          printf '%s' "$OAUTH_JSON" > credentials/oauth.json
+          printf '%s' "$SMTP_JSON" > credentials/smtp.json
+          printf '{"api_key":"%s"}' "$BULKEMAIL_API_KEY" > credentials/bulkemailchecker.json
+
+      - run: node src/send.js

@@ -1,0 +1,35 @@
+name: Opsis Reply Monitor
+
+on:
+  schedule:
+    # Svakih 15 min (najbrža praktična pauza na free tier).
+    # Mailovi koji dođu detektira se najkasnije 15-30 min, šalje gmail notif.
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: opsis-reply-monitor
+  cancel-in-progress: true
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Write SMTP creds
+        env:
+          SMTP_JSON: ${{ secrets.SMTP_JSON }}
+        run: |
+          mkdir -p credentials
+          printf '%s' "$SMTP_JSON" > credentials/smtp.json
+
+      - run: node src/reply_monitor.js

@@ -1,0 +1,47 @@
+name: SMTP Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install nodemailer
+        run: npm i nodemailer --no-save --no-audit --no-fund
+
+      - name: Test SMTP connectivity to mail.privateemail.com
+        env:
+          SMTP_TEST_PASS: ${{ secrets.SMTP_TEST_PASS }}
+        run: |
+          node -e "
+          const nm = require('nodemailer');
+          (async () => {
+            const user = 'opsisdalmatiab1@opsisdalmatiaoutreachseriab.com';
+            const pass = process.env.SMTP_TEST_PASS;
+            if (!pass) { console.log('ERROR: SMTP_TEST_PASS secret not set'); process.exit(1); }
+            for (const p of [465, 587, 25, 2525]) {
+              const cfg = {
+                host: 'mail.privateemail.com',
+                port: p,
+                secure: p === 465,
+                connectionTimeout: 10000,
+                greetingTimeout: 10000,
+                auth: { user, pass }
+              };
+              try {
+                const t = nm.createTransport(cfg);
+                await t.verify();
+                console.log('✅ PORT ' + p + ': REACHABLE + AUTH OK');
+                t.close();
+              } catch (e) {
+                console.log('❌ PORT ' + p + ': ' + (e.code || '?') + ' / ' + (e.message || '').slice(0, 80));
+              }
+            }
+          })().catch(e => { console.error('FATAL', e); process.exit(1); });
+          "

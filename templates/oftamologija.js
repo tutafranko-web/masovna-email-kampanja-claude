@@ -319,7 +319,7 @@ opsisdalmatia.com`
       subject: `jeste li uspjeli s onim prosli put?`,
       body: `Pozdrav,
 
-prije 3 dana poslao sam Vam {{e1_value_short}} - htio sam samo provjeriti je li nesto od toga bilo korisno.
+prije 3 dana poslao sam Vam neke prijedloge oko Vase web stranice - htio sam samo provjeriti je li nesto od toga bilo korisno.
 
 Razumijem ako niste imali vremena, to ide na dno svake to-do liste. Ako se zaglavilo bilo gdje, slobodno mi odgovorite par redaka - posaljem konkretne korake za Vas slucaj.
 

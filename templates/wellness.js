@@ -10,7 +10,7 @@ vidim da {{website}} trenutno vraca gresku ({{website_status}}). Gosti koji Vas 
 
 Najcesca 3 razloga (i kako provjeriti):
 
-1) Istekao SSL certifikat - provjerite na ssllabs.com/ssltest/, upisite Vas domen, ako vidite "expired" ? kontaktirajte hostera, vecina ga obnovi besplatno u 10 minuta.
+1) Istekao SSL certifikat - provjerite na ssllabs.com/ssltest/, upisite Vas domen, ako vidite "expired" → kontaktirajte hostera, vecina ga obnovi besplatno u 10 minuta.
 
 2) Hosting server pao - ulogirajte se u hosting panel (cPanel, Plesk, Hostinger panel...) i pogledajte ima li poruka o nedostupnosti.
 
@@ -64,7 +64,7 @@ Ako koristite Hostinger, Bluehost, SiteGround ili slican host:
 3) Kliknite "Install Let's Encrypt SSL" (besplatno je)
 4) Pricekajte 5 minuta da se propagira
 
-Ako koristite WordPress, nakon SSL instalacije idite u Settings ? General i promijenite "http://" u "https://" za WordPress Address i Site Address.
+Ako koristite WordPress, nakon SSL instalacije idite u Settings → General i promijenite "http://" u "https://" za WordPress Address i Site Address.
 
 Nakon toga Chrome vise nece prikazivati upozorenje, a Google ce prestati gurati Vasu stranicu nize u rezultatima pretrage (rangira HTTPS stranice vise od 2014.).
 
@@ -127,10 +127,10 @@ pogledao sam izvorni kod {{website}} i vidio da na stranici nemate ni Google Ana
 
 Google Analytics 4 je besplatan i postavlja se za 10 minuta:
 
-1) Idite na analytics.google.com ? "Start measuring"
+1) Idite na analytics.google.com → "Start measuring"
 2) Account name: "{{title}}"
 3) Property name: "{{title}}", odaberite vremensku zonu Croatia
-4) Data Stream ? Web ? upisite {{website}}
+4) Data Stream → Web → upisite {{website}}
 5) Dobit cete kod koji izgleda ovako:
 
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
@@ -174,7 +174,7 @@ WhatsApp Business aplikacija ima sekciju "Quick Replies" koja vecini to rijesi. 
 4) Hotelski paket (kracenica: /paket-nocenje)
 "U suradnji s [hotel ime] nudimo paket smjestaj + spa + obroci od {Y EUR} po noci. Idealno za parove ili kratki bijeg vikendom. Detalje paketa i dostupne termine posaljite mi zeljeni datum, vracamo s ponudom u 1h."
 
-Postavlja se za 5 minuta: WhatsApp Business ? Settings ? Business tools ? Quick replies ? Add new.
+Postavlja se za 5 minuta: WhatsApp Business → Settings → Business tools → Quick replies → Add new.
 
 Rijesit ce Vam otprilike 70% rutinskih pitanja, recepcija ce se moci posvetiti doceku gostiju i organizaciji tretmana.
 
@@ -324,7 +324,7 @@ Razumijem ako niste imali vremena, to ide na dno svake to-do liste. Ako se zagla
 
 Inace, ako Vas zanima razgovor o tome kako se ovakve stvari mogu posloziti automatski (bez Vaseg vremena svaki tjedan), nudimo besplatnu konzultaciju 30min:
 
-? opsisdalmatia.com/besplatna-konzultacija
+→ opsisdalmatia.com/besplatna-konzultacija
 
 Bez obveze, samo razgovor o tome sto Vam najvise smeta i ima li smisla nesto promijeniti.
 
@@ -363,7 +363,7 @@ Bez ugovorne obveze, placate jednom - rjesenje je Vase zauvijek.
 
 Ako Vas zanima razgovor, evo link za besplatnu 30-min konzultaciju (bez obveze, cak i ako odlucite ne raditi s nama):
 
-? opsisdalmatia.com/besplatna-konzultacija
+→ opsisdalmatia.com/besplatna-konzultacija
 
 Ili samo odgovorite na ovaj mail s 2-3 termina koja Vam odgovaraju.
 
@@ -405,7 +405,7 @@ Krajnji rezultat: klijenti rezerviraju i pitaju 24/7, cak i kad zatvoreno.
 
 Ako Vas zanima razgovor, evo link za besplatnu 30-min konzultaciju:
 
-? opsisdalmatia.com/besplatna-konzultacija
+→ opsisdalmatia.com/besplatna-konzultacija
 
 Ili odgovorite s 2-3 termina koja Vam odgovaraju.
 
@@ -443,7 +443,7 @@ Bez ugovorne obveze, placate jednom.
 
 Ako Vas zanima razgovor o tome je li redesign isplativiji nego krpanje stare, evo link za besplatnu 30-min konzultaciju:
 
-? opsisdalmatia.com/besplatna-konzultacija
+→ opsisdalmatia.com/besplatna-konzultacija
 
 Lijep pozdrav,
 {{sender_ime}}
@@ -476,7 +476,7 @@ Bez dugorocnog ugovora - mozete otkazati s 30 dana najave, Vasi rankings i konfi
 
 Razgovor o tome ima li smisla za Vasu nisu - besplatna 30-min konzultacija:
 
-? opsisdalmatia.com/besplatna-konzultacija
+→ opsisdalmatia.com/besplatna-konzultacija
 
 Lijep pozdrav,
 {{sender_ime}}
@@ -510,7 +510,7 @@ Bez ugovorne obveze, placate jednom. Mjesecni izvjestaji idu automatski svakog 1
 
 Razgovor o tome sto ima smisla u Vasem slucaju - besplatna 30-min konzultacija:
 
-? opsisdalmatia.com/besplatna-konzultacija
+→ opsisdalmatia.com/besplatna-konzultacija
 
 Lijep pozdrav,
 {{sender_ime}}
@@ -547,7 +547,7 @@ Bez dugorocne obveze, sve konfiguracije ostaju Vase.
 
 Najlakse je vidjeti uzivo kako radi - besplatna 30-min demo + konzultacija:
 
-? opsisdalmatia.com/besplatna-konzultacija
+→ opsisdalmatia.com/besplatna-konzultacija
 
 Lijep pozdrav,
 {{sender_ime}}
@@ -585,7 +585,7 @@ Bez ugovorne obveze.
 
 Razgovor o tome je li redesign isplativiji od optimizacije postojeceg - besplatna 30-min konzultacija:
 
-? opsisdalmatia.com/besplatna-konzultacija
+→ opsisdalmatia.com/besplatna-konzultacija
 
 Lijep pozdrav,
 {{sender_ime}}
@@ -618,7 +618,7 @@ Mozete otkazati s 30 dana najave - Vasi rezultati ostaju Vasi.
 
 Razgovor o tome ima li smisla za Vasu konkurenciju - besplatna 30-min konzultacija:
 
-? opsisdalmatia.com/besplatna-konzultacija
+→ opsisdalmatia.com/besplatna-konzultacija
 
 Lijep pozdrav,
 {{sender_ime}}
@@ -656,7 +656,7 @@ Paketna ponuda za obje: popust (kontaktirajte za personaliziranu cijenu).
 
 Razgovor o tome sto ima najveci ROI za Vasu nisu - besplatna 30-min konzultacija:
 
-? opsisdalmatia.com/besplatna-konzultacija
+→ opsisdalmatia.com/besplatna-konzultacija
 
 Lijep pozdrav,
 {{sender_ime}}
@@ -681,9 +681,9 @@ Nije bilo odgovora pa pretpostavljam da nije pravi trenutak ili tema nije releva
 
 Jednu malu uslugu prije nego ode - ako Vam ne smeta odgovoriti jednom rijeci, javite koje od ovih je istina:
 
-- **"Kasnije"** ? pingam ponovno za 6 mjeseci, do tada miran sam
-- **"Ne"** ? micem Vas iz liste zauvijek, nece vise email-a
-- **"Promaknulo mi je"** ? posaljem zadnji put glavno sto sam htio reci
+- **"Kasnije"** → pingam ponovno za 6 mjeseci, do tada miran sam
+- **"Ne"** → micem Vas iz liste zauvijek, nece vise email-a
+- **"Promaknulo mi je"** → posaljem zadnji put glavno sto sam htio reci
 
 Razumijem ako ni to nije vrijedno odgovora - ne brinite, automatski Vas micem za 14 dana ako ne cujem nista.
 

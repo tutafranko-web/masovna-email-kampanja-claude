@@ -1,0 +1,53 @@
+name: Website Audit Re-scanner
+
+on:
+  schedule:
+    # Daily at 03:00 UTC = 5:00 Zagreb (low traffic)
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Max rows per run'
+        required: false
+        default: '500'
+      force:
+        description: 'Re-audit all (ignore TTL)'
+        required: false
+        default: 'false'
+      only:
+        description: 'Single industry (or empty)'
+        required: false
+        default: ''
+
+concurrency:
+  group: opsis-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Write credentials
+        env:
+          OAUTH_JSON: ${{ secrets.OAUTH_JSON }}
+        run: |
+          mkdir -p credentials
+          printf '%s' "$OAUTH_JSON" > credentials/oauth.json
+
+      - name: Run audit
+        env:
+          LIMIT: ${{ github.event.inputs.limit || '500' }}
+          FORCE: ${{ github.event.inputs.force || 'false' }}
+          ONLY: ${{ github.event.inputs.only || '' }}
+          AUDIT_TTL_DAYS: '30'
+        run: node src/audit_scraper.js

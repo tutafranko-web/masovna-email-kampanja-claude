@@ -105,4 +105,4 @@ async function bulkUpdateColumn(sheetId, gid, columnName, rowValues) {
   return updated;
 }
 
-module.exports = { readRows, updateRow, getSheet, ensureColumn, bulkUpdateColumn };
+module.exports = { readRows, updateRow, getSheet, ensureColumn, bulkUpdateColumn, getAuth };

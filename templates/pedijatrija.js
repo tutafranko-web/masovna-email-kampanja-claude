@@ -23,7 +23,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
     V2: {
       subject: `mala stvar za Vas Google profil`,
@@ -48,7 +50,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
     V3: {
       subject: `Chrome upozorenje na Vasoj stranici`,
@@ -75,7 +79,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
     V4: {
       subject: `Google ne vidi cijelu Vasu stranicu`,
@@ -112,7 +118,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
     V5: {
       subject: `nemate Analytics - propustate vazne podatke`,
@@ -153,7 +161,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
     V6: {
       subject: `WhatsApp Quick Replies za pitanja roditelja`,
@@ -184,7 +194,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
     V7: {
       subject: `Vasa stranica se sporo otvara na mobitelu`,
@@ -221,7 +233,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
     V8: {
       subject: `kako Vasa stranica izgleda u Google rezultatima`,
@@ -278,7 +292,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
     V9: {
       subject: `5 sitnica za bolji broj pregleda i manje no-show`,
@@ -312,7 +328,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
   },
   E2: {
@@ -335,7 +353,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     }
   },
   E3: {
@@ -374,7 +394,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
     V2: {
       subject: `kompletno online prisustvo za {{Kategorija_lc}}`,
@@ -416,7 +438,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
     V3: {
       subject: `redesign Vase stranice - HTTPS + brzina rijeseno`,
@@ -452,7 +476,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
     V4: {
       subject: `da Vas Google konacno vidi`,
@@ -485,7 +511,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
     V5: {
       subject: `tracking + automatski izvjestaji za Vas biznis`,
@@ -519,7 +547,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
     V6: {
       subject: `AI koji odgovara na upite umjesto Vas`,
@@ -556,7 +586,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
     V7: {
       subject: `stranica koja se otvara u 1.5s na mobitelu`,
@@ -594,7 +626,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
     V8: {
       subject: `bolji prikaz u Google rezultatima`,
@@ -627,7 +661,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
     V9: {
       subject: `2 stvari koje obicno pomazu vec dobrim stranicama`,
@@ -665,7 +701,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     },
   },
   E4: {
@@ -696,7 +734,9 @@ Lijep pozdrav,
 
 -
 Opsis Dalmatia
-opsisdalmatia.com`
+opsisdalmatia.com
+
+Ne zelite vise dobivati ove mailove? Odgovorite "STOP HRVATSKA".`
     }
   }
 };

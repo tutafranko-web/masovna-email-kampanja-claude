@@ -2,9 +2,9 @@ name: Opsis Bulk Sender
 
 on:
   schedule:
-    # 0 7-15 * * *  = svaki sat od 9:00 do 17:00 Zagreb (CEST = UTC+2)
-    # GH cron na free tier može kasniti do 15 min — to je OK
-    - cron: '0 7-15 * * *'
+    # */30 6-16 * * *  = svakih 30 min od 8:00 do 18:30 Zagreb (CEST = UTC+2)
+    # 22 attempts/dan. Run traje max 25 min → cijena 30-min slot dostatan.
+    - cron: '*/30 6-16 * * *'
   workflow_dispatch:
 
 concurrency:
@@ -14,7 +14,7 @@ concurrency:
 jobs:
   send:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 28
     steps:
       - uses: actions/checkout@v4
 

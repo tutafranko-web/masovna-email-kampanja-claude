@@ -93,6 +93,6 @@
     "max_wait_between_sends_ms": 60000,
     "min_cycle_wait_ms": 30000,
     "max_cycle_wait_ms": 90000,
-    "session_max_runtime_ms": 3000000
+    "session_max_runtime_ms": 1500000
   }
 }

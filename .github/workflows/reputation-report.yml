@@ -1,20 +1,19 @@
-name: Opsis Reply Monitor
+name: Weekly Reputation Report
 
 on:
   schedule:
-    # Svakih 15 min (najbrža praktična pauza na free tier).
-    # Mailovi koji dođu detektira se najkasnije 15-30 min, šalje gmail notif.
-    - cron: '*/15 * * * *'
+    # Ponedjeljak 07:00 UTC = 9:00 Zagreb (CEST)
+    - cron: '0 7 * * 1'
   workflow_dispatch:
 
 concurrency:
-  group: opsis-reply-monitor
+  group: opsis-reputation
   cancel-in-progress: true
 
 jobs:
-  monitor:
+  report:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -27,11 +26,11 @@ jobs:
 
       - name: Write credentials
         env:
-          SMTP_JSON: ${{ secrets.SMTP_JSON }}
           OAUTH_JSON: ${{ secrets.OAUTH_JSON }}
+          SMTP_JSON: ${{ secrets.SMTP_JSON }}
         run: |
           mkdir -p credentials
-          printf '%s' "$SMTP_JSON" > credentials/smtp.json
           printf '%s' "$OAUTH_JSON" > credentials/oauth.json
+          printf '%s' "$SMTP_JSON" > credentials/smtp.json
 
-      - run: node src/reply_monitor.js
+      - run: node src/reputation_report.js

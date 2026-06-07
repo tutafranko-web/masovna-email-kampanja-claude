@@ -1,11 +1,11 @@
-// Reply monitor: polls IMAP for all 12 mailboxes, sends gmail notification
-// to NOTIFY_TO when new UNSEEN replies arrive. Uses IMAP \Seen flag as state —
-// no local state file needed, survives cloud routine restarts.
+// Reply monitor: polls IMAP for all 12 mailboxes, classifies each new UNSEEN,
+// appends to ReplyLog sheet, handles STOP HRVATSKA unsubscribes, sends Gmail
+// notification for genuine replies. Uses IMAP \Seen flag as state — no local state.
 //
 // env vars:
-//   NOTIFY_TO=tutafranko@gmail.com (default)
-//   DRY_RUN=true        - log only, don't send notification, don't mark seen
-//   INIT=true           - mark ALL UNSEEN mails as Seen without notifying (baseline)
+//   NOTIFY_TO=tutafranko@gmail.com  default
+//   DRY_RUN=true                    log only, don't send notif, don't mark seen, don't write
+//   INIT=true                       mark all UNSEEN as Seen without notifying (baseline)
 
 const fs = require('fs');
 const path = require('path');
@@ -19,6 +19,16 @@ const IMAP_HOST = 'mail.privateemail.com';
 const IMAP_PORT = 993;
 
 const SMTP_PATH = path.resolve(__dirname, '..', 'credentials', 'smtp.json');
+
+// ReplyLog config — uses existing psihijatrija doc, new tab
+const REPLY_LOG_SHEET_ID = '1eMoz0BTb9KNjtwFG9Xyz6Cl5XAlRJqdw7aK2oyK-VG8';
+const REPLY_LOG_TAB = 'ReplyLog';
+const REPLY_LOG_HEADERS = ['received_at', 'mailbox', 'from_email', 'from_name', 'subject', 'type', 'snippet', 'message_id', 'industry_mapped'];
+
+let sheetsModule;
+function getSheets() { if (!sheetsModule) sheetsModule = require('./sheets'); return sheetsModule; }
+let industriesConfig;
+function getIndustries() { if (!industriesConfig) industriesConfig = require('../industries.json'); return industriesConfig; }
 
 function log(...args) { console.log(`[${new Date().toISOString()}]`, ...args); }
 
@@ -42,50 +52,155 @@ async function withConnection(user, pass, fn) {
 
 async function fetchUnseen(conn) {
   const messages = await conn.search(['UNSEEN'], {
-    bodies: ['HEADER.FIELDS (FROM SUBJECT DATE MESSAGE-ID)'],
+    bodies: ['HEADER.FIELDS (FROM SUBJECT DATE MESSAGE-ID)', 'TEXT'],
     struct: false,
     markSeen: false
   });
   return messages.map(m => {
     const hdr = m.parts.find(p => p.which.includes('HEADER')) || {};
     const h = hdr.body || {};
+    const textPart = m.parts.find(p => p.which === 'TEXT');
+    const bodyText = textPart ? String(textPart.body || '').slice(0, 3000) : '';
     return {
       uid: m.attributes.uid,
       from: (h.from || ['?'])[0],
       subject: (h.subject || ['(no subject)'])[0],
       date: (h.date || ['?'])[0],
-      messageId: (h['message-id'] || ['?'])[0]
+      messageId: (h['message-id'] || ['?'])[0],
+      bodyText
     };
   });
 }
 
 async function markSeen(conn, uids) {
   if (!uids.length) return;
-  // imap-simple expects an array of UIDs; addFlags adds \Seen
   await conn.addFlags(uids, '\\Seen');
 }
 
-function isNoise(msg) {
+function extractEmail(fromField) {
+  // "Name <user@domain.com>" or "user@domain.com" or "<user@domain.com>"
+  const m = String(fromField || '').match(/<([^>]+@[^>]+)>/);
+  if (m) return m[1].toLowerCase().trim();
+  const m2 = String(fromField || '').match(/([\w.+-]+@[\w.-]+\.[a-z]{2,})/i);
+  return m2 ? m2[1].toLowerCase().trim() : '';
+}
+
+function extractName(fromField) {
+  const m = String(fromField || '').match(/^([^<]+)</);
+  return m ? m[1].trim().replace(/^["']|["']$/g, '') : '';
+}
+
+function classify(msg) {
   const from = (msg.from || '').toLowerCase();
   const subj = (msg.subject || '').toLowerCase();
-  // Bounces / system
-  if (from.includes('mailer-daemon') || from.includes('postmaster')) return true;
-  if (subj.startsWith('undelivered') || subj.startsWith('delivery status')) return true;
-  // DMARC / SPF / DKIM reports
-  if (from.includes('dmarc') || subj.includes('dmarc')) return true;
-  if (/report.?(domain|id)/i.test(subj)) return true;
-  if (subj.startsWith('[preview]')) return true;
-  // Self-test emails (warmup tools send from mailbox to itself with this subject)
-  if (subj.includes('test email to check account')) return true;
-  // Email warmup services (use double-underscore tag patterns)
-  if (/__/.test(subj)) return true;
-  if (subj.includes('warmup') || subj.includes('warm-up')) return true;
-  if (subj.includes('happy-money')) return true;
-  // Auto-replies / OOO
-  if (subj.startsWith('out of office') || subj.startsWith('automatic reply')) return true;
-  if (subj.startsWith('auto:') || subj.startsWith('autoreply')) return true;
-  if (subj.includes('vacation') && subj.includes('reply')) return true;
-  return false;
+  const body = (msg.bodyText || '').toLowerCase();
+
+  // STOP HRVATSKA — check FIRST (overrides everything)
+  if (/stop\s+hrvatska/i.test(body) || /stop\s+hrvatska/i.test(subj)) return 'stop';
+
+  // Bounces
+  if (from.includes('mailer-daemon') || from.includes('postmaster')) return 'bounce';
+  if (subj.startsWith('undelivered') || subj.startsWith('delivery status')) return 'bounce';
+
+  // DMARC/SPF reports
+  if (from.includes('dmarc') || subj.includes('dmarc')) return 'report';
+  if (/report.?(domain|id)/i.test(subj)) return 'report';
+  if (subj.startsWith('[preview]')) return 'report';
+
+  // Auto-responders
+  if (subj.startsWith('out of office') || subj.startsWith('automatic reply')) return 'autoresponder';
+  if (subj.startsWith('auto:') || subj.startsWith('autoreply')) return 'autoresponder';
+  if (subj.includes('vacation') && subj.includes('reply')) return 'autoresponder';
+  if (/thanks for (your|the) message|we (will|shall) respond/i.test(subj)) return 'autoresponder';
+  if (/we have received your|automatic.{0,10}response/i.test(body.slice(0, 500))) return 'autoresponder';
+
+  // Warmup / self-test
+  if (/__/.test(subj)) return 'warmup';
+  if (subj.includes('warmup') || subj.includes('warm-up')) return 'warmup';
+  if (subj.includes('happy-money')) return 'warmup';
+  if (subj.includes('test email to check account')) return 'warmup';
+
+  return 'reply';  // actionable human reply
+}
+
+// Find which industry sheet contains this email (returns array of industry keys)
+async function findIndustriesForEmail(email) {
+  const config = getIndustries();
+  const sheets = getSheets();
+  const hits = [];
+  for (const ind of config.industries) {
+    try {
+      const rows = await sheets.readRows(ind.sheet_id, ind.gid);
+      const found = rows.find(r => {
+        const allE = String(r.all_emails || '').toLowerCase();
+        return allE.split(/[,;\s]+/).map(e => e.trim()).includes(email);
+      });
+      if (found) hits.push({ industry: ind.key, sheet_id: ind.sheet_id, gid: ind.gid, row: found });
+    } catch (e) {
+      log(`WARN read ${ind.key} for lookup failed: ${e.message}`);
+    }
+  }
+  return hits;
+}
+
+async function markUnsubscribed(email) {
+  const sheets = getSheets();
+  const hits = await findIndustriesForEmail(email);
+  if (!hits.length) {
+    log(`STOP: no sheet contains ${email} — nothing to mark`);
+    return 0;
+  }
+  let marked = 0;
+  for (const h of hits) {
+    try {
+      const writes = new Map();
+      writes.set(h.row.__rowIndex, 'unsubscribed');
+      await sheets.bulkUpdateColumn(h.sheet_id, h.gid, 'email_status', writes);
+      marked++;
+      log(`STOP: marked ${email} unsubscribed in ${h.industry} (row ${h.row.__rowIndex})`);
+    } catch (e) {
+      log(`STOP ERROR marking ${email} in ${h.industry}: ${e.message}`);
+    }
+  }
+  return marked;
+}
+
+async function ensureReplyLogTab() {
+  const { GoogleSpreadsheet } = require('google-spreadsheet');
+  const sheets = getSheets();
+  const doc = new GoogleSpreadsheet(REPLY_LOG_SHEET_ID, sheets.getAuth());
+  await doc.loadInfo();
+  let tab = doc.sheetsByTitle[REPLY_LOG_TAB];
+  if (!tab) {
+    tab = await doc.addSheet({ title: REPLY_LOG_TAB, headerValues: REPLY_LOG_HEADERS });
+    log(`Created ReplyLog tab in ${REPLY_LOG_SHEET_ID}`);
+  } else {
+    await tab.loadHeaderRow();
+    const missing = REPLY_LOG_HEADERS.filter(h => !tab.headerValues.includes(h));
+    if (missing.length) {
+      const newHeaders = [...tab.headerValues, ...missing];
+      await tab.setHeaderRow(newHeaders);
+      log(`Added missing headers to ReplyLog: ${missing.join(', ')}`);
+    }
+  }
+  return tab;
+}
+
+async function appendToReplyLog(tab, replies) {
+  if (!replies.length) return;
+  const rows = replies.map(r => ({
+    received_at: new Date().toISOString(),
+    mailbox: r.mailbox,
+    from_email: r.fromEmail,
+    from_name: r.fromName,
+    subject: r.subject,
+    type: r.type,
+    snippet: String(r.bodyText || '').slice(0, 200).replace(/[\r\n\t]+/g, ' '),
+    message_id: r.messageId,
+    industry_mapped: r.industryMapped || ''
+  }));
+  await tab.addRows(rows);
+  log(`appended ${rows.length} rows to ReplyLog`);
 }
 
 async function notify(replies) {
@@ -102,87 +217,113 @@ async function notify(replies) {
   const subject = `🔔 ${replies.length} NOVI ODGOVOR${replies.length > 1 ? 'A' : ''} — Opsis outreach`;
   const body = `Stigli su novi mailovi u Privatemail mailboxove:\n\n${lines}\n\n---\nOtvori webmail: https://privateemail.com`;
   const info = await t.sendMail({
-    from: sender.user,
-    to: NOTIFY_TO,
-    subject,
-    text: body
+    from: sender.user, to: NOTIFY_TO, subject, text: body
   });
   log(`✅ notified ${NOTIFY_TO} (messageId=${info.messageId})`);
+}
+
+async function notifyStop(email, marked) {
+  const smtps = JSON.parse(fs.readFileSync(SMTP_PATH, 'utf8'));
+  const sender = smtps.b1;
+  const t = nodemailer.createTransport({
+    host: 'mail.privateemail.com', port: 465, secure: true,
+    auth: { user: sender.user, pass: sender.pass }
+  });
+  await t.sendMail({
+    from: sender.user, to: NOTIFY_TO,
+    subject: `🚫 STOP HRVATSKA — ${email}`,
+    text: `Unsubscribed: ${email}\nMarked in ${marked} sheet(s) as email_status=unsubscribed.\nNeće više dobivati mailove.`
+  });
 }
 
 async function main() {
   log(`reply_monitor start. NOTIFY_TO=${NOTIFY_TO} DRY_RUN=${DRY_RUN} INIT=${INIT}`);
   const smtps = JSON.parse(fs.readFileSync(SMTP_PATH, 'utf8'));
-  const newReplies = [];
-  let totalUnseen = 0, totalNoise = 0, totalReal = 0;
+  const allClassified = []; // {mailbox, uid, type, ...}
+  let totalUnseen = 0;
 
   for (const [key, c] of Object.entries(smtps)) {
     try {
       await withConnection(c.user, c.pass, async (conn) => {
         const unseen = await fetchUnseen(conn);
         totalUnseen += unseen.length;
-        const noise = unseen.filter(isNoise);
-        const real = unseen.filter(m => !isNoise(m));
-        totalNoise += noise.length;
-        totalReal += real.length;
-
-        log(`[${key}] ${c.user}: ${unseen.length} unseen, ${noise.length} noise, ${real.length} actionable`);
-
         if (INIT) {
-          // Mark everything seen, don't notify
-          if (!DRY_RUN && unseen.length > 0) {
-            await markSeen(conn, unseen.map(m => m.uid));
-          }
+          if (!DRY_RUN && unseen.length > 0) await markSeen(conn, unseen.map(m => m.uid));
+          log(`[${key}] INIT: ${unseen.length} marked seen`);
           return;
         }
-
-        // Mark noise as seen so we don't process again
-        if (!DRY_RUN && noise.length > 0) {
-          await markSeen(conn, noise.map(m => m.uid));
+        for (const m of unseen) {
+          allClassified.push({
+            ...m,
+            mailbox: c.user,
+            mailboxKey: key,
+            fromEmail: extractEmail(m.from),
+            fromName: extractName(m.from),
+            type: classify(m)
+          });
         }
-
-        for (const r of real) newReplies.push({ ...r, mailbox: c.user });
-
-        // Mark real replies as seen AFTER we successfully notify
-        // (done below in main, not here, so we don't mark-seen if notify fails)
+        log(`[${key}] ${c.user}: ${unseen.length} unseen`);
       });
     } catch (e) {
       log(`[${key}] ERROR ${c.user}: ${e.message.slice(0, 100)}`);
     }
   }
 
-  log(`Totals: ${totalUnseen} unseen, ${totalNoise} noise, ${totalReal} actionable`);
+  if (INIT) { log('INIT done'); return; }
 
-  if (INIT) {
-    log('INIT done — all current unseen marked as Seen baseline');
-    return;
-  }
+  // Group by type for reporting
+  const byType = {};
+  for (const m of allClassified) byType[m.type] = (byType[m.type] || 0) + 1;
+  log(`Classification: ${JSON.stringify(byType)} (total ${allClassified.length})`);
 
-  if (newReplies.length > 0 && !DRY_RUN) {
-    await notify(newReplies);
-    // After successful notify, mark them as Seen so next run doesn't re-notify
-    // Re-connect per mailbox to mark
-    const byMailbox = {};
-    for (const r of newReplies) {
-      byMailbox[r.mailbox] = byMailbox[r.mailbox] || [];
-      byMailbox[r.mailbox].push(r.uid);
-    }
-    for (const [mailbox, uids] of Object.entries(byMailbox)) {
-      const cred = Object.values(smtps).find(s => s.user === mailbox);
-      try {
-        await withConnection(cred.user, cred.pass, async (conn) => {
-          await markSeen(conn, uids);
-        });
-        log(`marked ${uids.length} as Seen in ${mailbox}`);
-      } catch (e) {
-        log(`WARN markSeen failed for ${mailbox}: ${e.message}`);
+  // Process STOPs first
+  const stops = allClassified.filter(m => m.type === 'stop');
+  for (const s of stops) {
+    if (DRY_RUN) {
+      log(`DRY_RUN: would unsubscribe ${s.fromEmail}`);
+    } else {
+      const marked = await markUnsubscribed(s.fromEmail);
+      if (marked > 0) {
+        try { await notifyStop(s.fromEmail, marked); } catch (e) { log(`notifyStop err: ${e.message}`); }
       }
     }
-  } else if (newReplies.length > 0 && DRY_RUN) {
-    log('DRY_RUN — would notify these:');
-    for (const r of newReplies) {
-      console.log(`  ${r.mailbox} | FROM: ${r.from} | SUBJECT: ${r.subject}`);
+  }
+
+  // Append ALL to ReplyLog (even noise, for full audit)
+  if (!DRY_RUN && allClassified.length > 0) {
+    try {
+      const tab = await ensureReplyLogTab();
+      await appendToReplyLog(tab, allClassified);
+    } catch (e) {
+      log(`ReplyLog write ERROR (continuing): ${e.message}`);
     }
+  }
+
+  // Notify only for genuine replies (not noise, not stops which have their own notify)
+  const realReplies = allClassified.filter(m => m.type === 'reply');
+  if (realReplies.length > 0 && !DRY_RUN) {
+    try { await notify(realReplies); } catch (e) { log(`notify err: ${e.message}`); }
+  }
+
+  // Mark all as Seen (we processed them all)
+  if (!DRY_RUN) {
+    const byMailboxKey = {};
+    for (const m of allClassified) {
+      byMailboxKey[m.mailboxKey] = byMailboxKey[m.mailboxKey] || { user: m.mailbox, uids: [] };
+      byMailboxKey[m.mailboxKey].uids.push(m.uid);
+    }
+    for (const [key, { user, uids }] of Object.entries(byMailboxKey)) {
+      const cred = smtps[key];
+      try {
+        await withConnection(cred.user, cred.pass, async (conn) => { await markSeen(conn, uids); });
+        log(`marked ${uids.length} Seen in ${user}`);
+      } catch (e) {
+        log(`WARN markSeen failed for ${user}: ${e.message}`);
+      }
+    }
+  } else if (allClassified.length > 0) {
+    log('DRY_RUN — would process these:');
+    for (const m of allClassified.slice(0, 20)) console.log(`  [${m.type}] ${m.mailbox} | FROM: ${m.from} | SUBJECT: ${m.subject}`);
   }
 
   log('done');

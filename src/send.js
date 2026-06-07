@@ -132,6 +132,10 @@ async function processIndustry(industry, st) {
       email_last_variant: row.email_variant,
       email_last_subject: email.subject
     };
+    // Ensure tracking columns exist (silent drop otherwise — google-spreadsheet
+    // ignores writes to unknown headers).
+    await sheets.ensureColumn(industry.sheet_id, industry.gid, 'email_last_variant');
+    await sheets.ensureColumn(industry.sheet_id, industry.gid, 'email_last_subject');
     if (apiResult) {
       updates.email_verified_api = apiResult.status;
       updates.email_verified_api_event = apiResult.event || '';
